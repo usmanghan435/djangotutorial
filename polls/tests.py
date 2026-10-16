@@ -31,6 +31,7 @@ class QuestionModelTests(TestCase):
 
 
 
+
 class QuestionIndexViewTests(TestCase):
 
     def test_no_questions(self):
@@ -55,9 +56,9 @@ class QuestionIndexViewTests(TestCase):
             response.context["latest_question_list"],
             [question2, question1],
         )
-    
+
     def test_future_question_is_not_displayed(self):
-        future_question = Question.objects.create(
+        Question.objects.create(
             question_text="Future question",
             pub_date=timezone.now() + datetime.timedelta(days=30),
         )
@@ -68,6 +69,37 @@ class QuestionIndexViewTests(TestCase):
             response.context["latest_question_list"],
             [],
         )
+
+    def test_past_question_with_future_question(self):
+        past_question = Question.objects.create(
+            question_text="Past question",
+            pub_date=timezone.now() - datetime.timedelta(days=5),
+        )
+
+        future_question = Question.objects.create(
+            question_text="Future question",
+            pub_date=timezone.now() + datetime.timedelta(days=5),
+        )
+
+        response = self.client.get(reverse("polls:index"))
+
+        self.assertContains(response, past_question.question_text)
+        self.assertNotContains(response, future_question.question_text)
+
+    def test_only_five_questions_are_displayed(self):
+        for day in range(6):
+            Question.objects.create(
+                question_text=f"Question {day}",
+                pub_date=timezone.now() - datetime.timedelta(days=day),
+            )
+
+        response = self.client.get(reverse("polls:index"))
+
+        self.assertEqual(
+            len(response.context["latest_question_list"]),
+            5,
+        )
+
 
 class QuestionDetailViewTests(TestCase):
 
