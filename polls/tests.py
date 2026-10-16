@@ -69,3 +69,72 @@ class QuestionIndexViewTests(TestCase):
             [],
         )
 
+class QuestionDetailViewTests(TestCase):
+
+    def test_existing_question(self):
+        question = Question.objects.create(
+            question_text="A test question",
+            pub_date=timezone.now() - datetime.timedelta(days=1),
+        )
+
+        response = self.client.get(
+            reverse("polls:detail", args=(question.id,))
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, question.question_text)
+    
+    def test_non_existing_question(self):
+        response = self.client.get(
+            reverse("polls:detail", args=(9999,))
+        )
+
+        self.assertEqual(response.status_code, 404)
+    
+    def test_future_question(self):
+        future_question = Question.objects.create(
+            question_text="Future question",
+            pub_date=timezone.now() + datetime.timedelta(days=30),
+        )
+
+        response = self.client.get(
+            reverse("polls:detail", args=(future_question.id,))
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+class QuestionResultsViewTests(TestCase):
+
+    def test_existing_question(self):
+        question = Question.objects.create(
+            question_text="A test question",
+            pub_date=timezone.now() - datetime.timedelta(days=1),
+        )
+
+        response = self.client.get(
+            reverse("polls:results", args=(question.id,))
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, question.question_text)
+    
+    def test_non_existing_question(self):
+        response = self.client.get(
+            reverse("polls:results", args=(9999,))
+        )
+
+        self.assertEqual(response.status_code, 404)
+    
+    def test_future_question(self):
+        future_question = Question.objects.create(
+            question_text="Future question",
+            pub_date=timezone.now() + datetime.timedelta(days=30),
+        )
+
+        response = self.client.get(
+            reverse("polls:results", args=(future_question.id,))
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+
